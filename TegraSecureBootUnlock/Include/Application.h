@@ -18,6 +18,9 @@
 
 #include <Protocol/SimpleTextOut.h>
 
+void uart_print(const char *string);
+void uart_init();
+
 
 
 

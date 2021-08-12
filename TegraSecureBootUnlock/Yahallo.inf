@@ -19,6 +19,7 @@
   MemUtility.c
   DeviceLut.c
   Smc.c
+  Uart.c
 
   Include/Application.h
 
