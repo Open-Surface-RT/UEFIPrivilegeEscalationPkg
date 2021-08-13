@@ -45,9 +45,6 @@
   # Entry Point Libraries
   #
   UefiApplicationEntryPoint|MdePkg/Library/UefiApplicationEntryPoint/UefiApplicationEntryPoint.inf
-  ShellCEntryLib|ShellPkg/Library/UefiShellCEntryLib/UefiShellCEntryLib.inf
-  UefiDriverEntryPoint|MdePkg/Library/UefiDriverEntryPoint/UefiDriverEntryPoint.inf
-  WindowsBootApplicationEntryPoint|YahalloPkg/Library/WindowsBootApplicationEntryPoint/WindowsBootApplicationEntryPoint.inf
 
   #
   # Common Libraries
