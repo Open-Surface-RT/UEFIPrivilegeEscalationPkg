@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/TegraSecureBootUnlock/",
+                "${workspaceFolder}/../ArmPkg/Include/",
+                "${workspaceFolder}/../MdePkg/Include/",
+                "${workspaceFolder}/../MdePkg/Include/Arm/"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/arm-linux-gnueabihf-gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-arm"
+        }
+    ],
+    "version": 4
+}
