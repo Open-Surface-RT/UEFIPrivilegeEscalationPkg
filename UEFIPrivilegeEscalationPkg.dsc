@@ -1,4 +1,4 @@
-## @file  YahalloPkg.dsc
+## @file  UEFIPrivilegeEscalationPkg.dsc
 # This Package provides buildout config for the application.
 #
 # Copyright (c) 2007 - 2020, Intel Corporation. All rights reserved.<BR>
@@ -6,17 +6,18 @@
 # (C) Copyright 2016 - 2020 Hewlett Packard Enterprise Development LP<BR>
 # Copyright (c) 1996 - 2020, The ReactOS Project. All rights reserved.<BR>
 # Copyright (c) 2019 - 2020, Bingxing Wang and other project authors. All rights reserved.<BR>
+# Copyright (c) 2021 - 2021, Leander Wollersberger. All rights reserved.<BR>
 #
 # SPDX-License-Identifier: GPL-2.0-only
 #
 ##
 
 [Defines]
-  PLATFORM_NAME                  = YahalloPkg
-  PLATFORM_GUID                  = 8905d433-2814-43a6-bfb1-671010122961
-  PLATFORM_VERSION               = 0.01
+  PLATFORM_NAME                  = UEFIPrivilegeEscalationPkg
+  PLATFORM_GUID                  = 565dec7c-6d0f-4467-8ae0-9703a102b3bb
+  PLATFORM_VERSION               = 1.0
   DSC_SPECIFICATION              = 0x00010006
-  OUTPUT_DIRECTORY               = Build/YahalloPkg
+  OUTPUT_DIRECTORY               = Build/UEFIPrivilegeEscalationPkg
   SUPPORTED_ARCHITECTURES        = ARM
   BUILD_TARGETS                  = DEBUG|RELEASE
   SKUID_IDENTIFIER               = DEFAULT
@@ -91,5 +92,5 @@
   NULL|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
 
 [Components]
-  YahalloPkg/TegraSecureBootUnlock/Yahallo.inf
+  UEFIPrivilegeEscalationPkg/TegraSecureBootUnlock/Yahallo.inf
 
