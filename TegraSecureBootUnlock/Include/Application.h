@@ -1,5 +1,5 @@
-// Copyright (c) 2019 - 2020, Bingxing Wang and other project authors. All
-// rights reserved.<BR>
+// Copyright (c) 2019 - 2020, Bingxing Wang and other project authors. All rights reserved.<BR>
+// Copyright (c) 2021 - 2021, Leander Wollersberger. All rights reserved.<BR>
 
 #include <Uefi.h>
 
