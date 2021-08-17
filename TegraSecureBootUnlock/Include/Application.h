@@ -21,19 +21,6 @@
 void uart_print(const char *string);
 void uart_init();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 typedef UINTN  size_t;
 typedef UINT8  uint8_t;
 typedef UINT16 uint16_t;
@@ -50,17 +37,14 @@ typedef void (*HACK_ENTRY)(void);
 
 // Routines
 VOID SurfaceRTExploit(VOID);
-VOID Surface2Exploit(VOID);
 VOID FinalizeApp(VOID);
 
 VOID PerformNvTegra3Exploit(VOID);
-VOID PerformNvTegra4Exploit(VOID);
 
 UINT32
 ArmCallSmcHelper(UINT32 R0, UINT32 R1, UINT32 R2, UINT32 R3);
 
 VOID Tegra3ConsoleOutputFixup(VOID);
-VOID CortexA15CachePrime(VOID);
 
 EFI_STATUS LaunchExploitByVersionTable(VOID);
 

@@ -11,7 +11,6 @@
 
 [Sources]
   App.c
-  Cache.c
   Console.c
   Exploit.c
   MemUtility.c
