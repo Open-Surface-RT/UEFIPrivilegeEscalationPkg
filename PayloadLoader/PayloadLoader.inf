@@ -4,11 +4,11 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = Yahallo
-  FILE_GUID                      = e59e2095-d00d-4fc1-85f3-5c0fc38b7d54
+  BASE_NAME                      = PayloadLoader
+  FILE_GUID                      = 16c03a30-4082-417e-bfa5-07908bc0c052
   MODULE_TYPE                    = UEFI_APPLICATION
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = TegraSecureBootUnlockEntryPoint
+  ENTRY_POINT                    = PayloadLoaderEntryPoint
 
 [Sources]
   App.c

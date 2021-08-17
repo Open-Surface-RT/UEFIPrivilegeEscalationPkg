@@ -92,5 +92,5 @@
   NULL|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
 
 [Components]
-  UEFIPrivilegeEscalationPkg/TegraSecureBootUnlock/Yahallo.inf
+  UEFIPrivilegeEscalationPkg/PayloadLoader/PayloadLoader.inf
 

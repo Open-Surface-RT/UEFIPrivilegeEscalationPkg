@@ -34,7 +34,7 @@ char* utoa(unsigned int value, char* result, int base) {
     return result;
 }
 
-EFI_STATUS TegraSecureBootUnlockEntryPoint(
+EFI_STATUS PayloadLoaderEntryPoint(
     EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
 	EFI_STATUS Status = EFI_SUCCESS;
