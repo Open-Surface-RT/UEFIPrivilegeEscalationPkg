@@ -1,0 +1,55 @@
+# Yahallo.inf: main application for Tegra Secure Boot unlocking
+# Copyright (c) 2019 - 2020, Bingxing Wang and other project authors. All rights reserved.<BR>
+# Copyright (c) 2021 - 2021, Leander Wollersberger. All rights reserved.<BR>
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = MemoryDumpTool
+  FILE_GUID                      = 44a74e6d-832a-48aa-b46d-b42ba8469cd7
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = MemoryDumpToolEntryPoint
+
+[Sources]
+  App.c
+  Console.c
+  Exploit.c
+  MemUtility.c
+  DeviceLut.c
+  Smc.c
+  Uart.c
+
+  Include/Application.h
+
+[Packages]
+  ArmPkg/ArmPkg.dec
+  ArmPlatformPkg/ArmPlatformPkg.dec
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  ArmLib
+  ArmSmcLib
+  DevicePathLib
+  BaseLib
+  MemoryAllocationLib
+  UefiLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  BaseMemoryLib
+  DebugLib
+  PrintLib
+
+[BuildOptions.ARM]
+   # Well, eventually this should be removed
+   GCC:*_*_*_CC_FLAGS = -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast -Wno-missing-braces
+
+[Guids]
+  gEfiGlobalVariableGuid                        ## CONSUMES
+  gEfiSmbiosTableGuid                           ## CONSUMES
+  gEfiFileInfoGuid
+
+[Protocols]
+  gEfiSimpleTextOutProtocolGuid                 ## CONSUMES
+  gEfiDevicePathProtocolGuid                    ## CONSUMES

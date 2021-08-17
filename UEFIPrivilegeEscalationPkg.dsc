@@ -93,4 +93,5 @@
 
 [Components]
   UEFIPrivilegeEscalationPkg/PayloadLoader/PayloadLoader.inf
+  UEFIPrivilegeEscalationPkg/MemoryDumpTool/MemoryDumpTool.inf
 
