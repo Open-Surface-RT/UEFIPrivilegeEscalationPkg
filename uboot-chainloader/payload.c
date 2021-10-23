@@ -78,6 +78,7 @@ char* utoa(unsigned int value, char* result, int base);
 
 // These are defined in payload_asm.S
 extern void print_regs();
+extern void set_cpsr();
 extern void dead_loop();
 
 extern void enable_caches();
@@ -89,11 +90,12 @@ void main()
 	// Execute the assembly code, which prints some important registers 
 	// and makes sure we are executing in secure mode.
 	print_regs();
+	set_cpsr();
 
 	uart_print("Executed print_regs()! Jumping to uboot!\r\n");
 
-	void (*foo)(void) = (void (*)())0x84000000;
-	foo();
+	//void (*foo)(void) = (void (*)())0x84000000;
+	//foo();
 
 	uart_print("Error. Uboot returned (or was not exeucted at all). Going into a dead loop!\r\n");
 

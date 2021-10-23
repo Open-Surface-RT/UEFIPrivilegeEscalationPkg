@@ -4,6 +4,19 @@
 // make sure to change 'void clean_buffer(void* buffer)' in payload.c if you change this.
 utoabuffer: .word 48
 
+.global set_cpsr
+.type set_cpsr, function
+set_cpsr:
+	push {lr}
+
+	mrs r0, CPSR
+	lsl r0, r0, #31
+	bl print_r0
+	lsr r0, r0, #5
+	add r0, r0, #0b10011
+
+	pop {pc}
+
 .global print_regs
 .type print_regs, function
 print_regs:

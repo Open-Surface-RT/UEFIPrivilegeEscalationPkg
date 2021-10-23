@@ -32,8 +32,8 @@ startup_real:
 //----------------------------------------------------------------
 	
         MOV     r0,#0
-//        MCR     p15, 0, r0, c8, c7, 0      // I-TLB and D-TLB invalidation
-//        MCR     p15, 0, r0, c7, c5, 6      // BPIALL - Invalidate entire branch predictor array
+        MCR     p15, 0, r0, c8, c7, 0      // I-TLB and D-TLB invalidation
+        MCR     p15, 0, r0, c7, c5, 6      // BPIALL - Invalidate entire branch predictor array
 
 //----------------------------------------------------------------
 // Cache Invalidation code for Cortex-A9
@@ -170,6 +170,7 @@ init_ttb_1:
 
         MRC     p15, 0, r0, c3, c0, 0      // Read Domain Access Control Register      
         LDR     r0, =0xFFFFFFFF            // Initialize every domain entry to b11 (manager)
+//        LDR     r0, =0x55555555
         MCR     p15, 0, r0, c3, c0, 0      // Write Domain Access Control Register
 
 //----------------------------------------------------------------
@@ -181,7 +182,7 @@ init_ttb_1:
         BIC     r0, r0, #(0x1 << 12)       // Clear I bit 12 to disable I Cache
         BIC     r0, r0, #(0x1 <<  2)       // Clear C bit  2 to disable D Cache
         BIC     r0, r0, #0x2               // Clear A bit  1 to disable strict alignment fault checking
-//        ORR     r0, r0, #0x1               // Set M bit 0 to enable MMU before scatter loading
+        ORR     r0, r0, #0x1               // Set M bit 0 to enable MMU before scatter loading
         MCR     p15, 0, r0, c1, c0, 0      // Write System Control Register
         ISB
 
