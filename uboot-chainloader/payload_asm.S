@@ -43,9 +43,10 @@ print_r0:
 	// Setup for utoa call. r0 was setup before we got into this subroutine
 	adr r1, utoabuffer
 	mov r2, #2
+	mov r3, #32
 
 	// r0 is input, r1 is destination buffer, r2 is base
-	bl utoa
+	bl utoa_leading_zero
 
 	// Execute uart_print. r0 is the string's address
 	adr r0, utoabuffer

@@ -131,6 +131,34 @@ char* utoa(unsigned int value, char* result, int base) {
     return result;
 }
 
+char* utoa_leading_zero(unsigned int value, char* result, int base, int stringsize) {
+    // check that the base if valid
+    if (base < 2 || base > 36) { *result = '\0'; return result; }
+
+    char* ptr = result, *ptr1 = result, tmp_char;
+    int tmp_value, counter = 0;
+
+    do {
+        tmp_value = value;
+        value /= base;
+        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
+		counter++;
+    } while ( value );
+
+	while (counter < stringsize) {
+		*ptr++ = '0';
+		counter++;
+	}
+
+    *ptr-- = '\0';
+    while(ptr1 < ptr) {
+        tmp_char = *ptr;
+        *ptr--= *ptr1;
+        *ptr1++ = tmp_char;
+    }
+    return result;
+}
+
 void uart_print(const char *string) {
 	// use this to keep track of if uart has been initialized
 	uart_init();
