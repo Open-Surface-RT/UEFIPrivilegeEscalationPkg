@@ -82,6 +82,7 @@ void modify_cps_reg();
 // These are defined in payload_asm.S
 extern void assembly_code();
 extern void dead_loop();
+extern void set_cpsr();
 
 void main()
 {
@@ -91,12 +92,16 @@ void main()
 	// and makes sure we are executing in secure mode.
 	assembly_code();
 
+	uart_print("Setting CPSR.M to SVC\r\n");
+
+	set_cpsr();
+
 	uart_print("Doing stuff with CSR Register!\r\n");
 	// Changing cps reg with this doesn't work
-	//modify_cps_reg();
+	modify_cps_reg();
 
 	uart_print("Memory-dumping over UART\r\n");
-	// trying to dump this makes the screen go pink and doesn't print anyhting to uart
+	// trying to dump this makes the screen go blue and doesn't print anyhting to uart
 	memory_dump_uart((uint32_t*)0xFFF00000, 0x100);
 	// trying to dump this works
 	//memory_dump_uart((uint32_t*)0x6000C200, 0x100);
@@ -120,7 +125,8 @@ void modify_cps_reg()
 
 	//*cps_reg = *cps_reg && 0b1111111111111110;
 	//*cps_reg = *cps_reg || 0b0000000000100000;
-	*cps_reg = 0x32;
+	*cps_reg = 0b0000000000100001;
+	//*cps_reg = 0x13;
 
 	uart_print("Printing CSR Register!\r\n");
 	uart_print(utoa_leading_zero(*cps_reg, printBuffer, 16, 8));
