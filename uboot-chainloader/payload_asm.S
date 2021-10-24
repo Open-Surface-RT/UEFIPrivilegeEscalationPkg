@@ -2,7 +2,7 @@
 
 // 48 bytes is a bit overkill, but it makes sure we don't override any stack
 // make sure to change 'void clean_buffer(void* buffer)' in payload.c if you change this.
-utoabuffer: .word 48
+utoabuffer: .space 48
 
 .global set_cpsr
 .type set_cpsr, function
@@ -27,8 +27,6 @@ print_regs:
 	mrs r0, CPSR
 	bl print_r0
 
-// 8-byte align the read of the SCR. This makes everything work. I don't know why
-.align 5
 	// Read NS bit into r0 and print the register
 	mrc p15, 0, r0, c1, c1, 0
 	bl print_r0
