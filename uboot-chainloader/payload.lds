@@ -26,9 +26,14 @@ SECTIONS
 	/DISCARD/ : { *(.gnu*) }
 	/DISCARD/ : { *(.data*) }*/
 
-	.pagetable 0x80000000 (NOLOAD):
+	.pagetable 0x80010000 (NOLOAD):
     {
         __pagetable_start = .;
         . = . + 0x4000;
+    }
+
+	.uboot 0x84000000 (NOLOAD):
+    {
+        __uboot_base = .;
     }
 }

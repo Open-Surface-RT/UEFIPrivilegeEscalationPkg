@@ -14,6 +14,8 @@ startup:
 .align 4
 
 startup_real:
+        bl set_cpsr
+
 //----------------------------------------------------------------
 // Disable caches, MMU and branch prediction in case they were left enabled from an earlier run
 // This does not need to be done from a cold reset
@@ -134,6 +136,11 @@ Finished:
 // IMPP[9]=0     - Ignored
 // Domain[5:8]=1111   - Set all pages to use domain 15
 // XN[4]=1       - Execute never on Strongly-ordered memory
+// THIS
+// https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/Virtual-Memory-System-Architecture--VMSA-/Translation-tables/Translation-table-entry-formats?lang=en
+// https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/Virtual-Memory-System-Architecture--VMSA-/Memory-access-control/The-Execute-Never--XN--attribute-and-instruction-prefetching?lang=en
+
+
 // Bits[1:0]=10  - Indicate entry is a 1MB section
 //----------------------------------------------------------------
         LDR     r0,=__pagetable_start
@@ -150,7 +157,7 @@ Finished:
 
 init_ttb_1:
         ORR     r3, r2, r1, LSL#20          // R3 now contains full level1 descriptor to write
-        ORR     r3, r3, #0b0000000010000    // Set XN bit
+//        ORR     r3, r3, #0b0000000010000    // Set XN bit
         STR     r3, [r0, r1, LSL#2]         // Str table entry at TTB base + loopcount*4
         SUBS    r1, r1, #1                  // Decrement loop counter
         BPL     init_ttb_1
@@ -164,13 +171,23 @@ init_ttb_1:
         ORR     r3, r3, #0b1000000000000   // Set TEX bit 12
         STR     r3, [r0, r1, LSL#2]        // str table entry
 
+        // Set uboot also to this
+        // In this example, the 1MB section based at '__code_start' is setup specially as cacheable (write back mode).
+        // TEX[14:12]=001 and CB[3:2]= 11, Outer and inner write back, write allocate normal memory.
+        LDR     r1,=__uboot_base           // Base physical address of code segment
+        LSR     r1, #20                    // Shift right to align to 1MB boundaries
+        ORR     r3, r2, r1, LSL#20         // Setup the initial level1 descriptor again
+        ORR     r3, r3, #0b0000000001100   // Set CB bits
+        ORR     r3, r3, #0b1000000000000   // Set TEX bit 12
+        STR     r3, [r0, r1, LSL#2]        // str table entry
+
 //----------------------------------------------------------------
 // Setup domain control register - Enable all domains to client mode
 //----------------------------------------------------------------
 
         MRC     p15, 0, r0, c3, c0, 0      // Read Domain Access Control Register      
-        LDR     r0, =0xFFFFFFFF            // Initialize every domain entry to b11 (manager)
-//        LDR     r0, =0x55555555
+//        LDR     r0, =0xFFFFFFFF            // Initialize every domain entry to b11 (manager)
+        LDR     r0, =0x55555555
         MCR     p15, 0, r0, c3, c0, 0      // Write Domain Access Control Register
 
 //----------------------------------------------------------------

@@ -10,10 +10,27 @@ set_cpsr:
 	push {lr}
 
 	mrs r0, CPSR
-	lsl r0, r0, #31
 	bl print_r0
-	lsr r0, r0, #5
-	add r0, r0, #0b10011
+
+	// Copy the SP (StackPointer) and LR (LinkRegister) registers to r2 and r3, as these registers are not shared between execution modes.
+	// But for this program we need to keep them the same after setting CPSR.M to SVC mode.
+	mov r2, sp
+	mov r3, lr
+
+	// Set CPSR.M to 10011 (0x13) (SVC mode)
+	mrs r0, CPSR
+	mov r1, #0xFFFFFFE0
+	and r0, r0, r1
+	mov r1, #0x00000013
+	orr r0, r0, r1
+	msr CPSR, r0
+
+	// Put the copied SP and LR registers back.
+	mov sp, r2
+	mov lr, r3
+
+	mrs r0, CPSR
+	bl print_r0
 
 	pop {pc}
 
