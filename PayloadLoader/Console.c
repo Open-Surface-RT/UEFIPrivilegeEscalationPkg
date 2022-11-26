@@ -27,7 +27,7 @@ VOID Tegra3ConsoleOutputFixup(VOID)
       // TODO: Maybe set ConOut device later...?
       pScreenEfiOutputProtocol->OutputString(
           pScreenEfiOutputProtocol,
-          L"At this moment you should have seen something on the screen...\n");
+          L"At this moment you should have seen something on the screen...\r\n");
     }
   }
 }

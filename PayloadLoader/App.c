@@ -39,21 +39,25 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	EFI_STATUS Status = EFI_SUCCESS;
 	
 	// Turn off watchdog timer, since this does take a while
+	Print(L"Disable Watchdog\n");
 	gBS->SetWatchdogTimer(0, 0, 0, NULL);
 
+	Print(L"Fixing T30 Console\n");
 	Tegra3ConsoleOutputFixup();
-
-	Print(L"Hello World\n");
+	
+	Print(L"Payload Loader");
+	Print(L"\tHello World\n");
 	uart_print("Hello World.\r\n");
 
 	uart_print("perform exploit\r\n");
+	Print(L"\tUnprotect TZ\n");
 	PerformNvTegra3Exploit();
 	uart_print("done exploit\r\n");
 
 	//
 	// Put payload into memory
 	//
-	Print(L"Putting payload into memory!\n");
+	Print(L"\tPutting payload into memory!\n");
 	uart_print("Putting payload into memory!\r\n");
 
 	size_t fileSize1 = 0;
@@ -61,12 +65,12 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	
 	if (Status != EFI_SUCCESS)
 	{
-		Print(L"Failed at loading payload!\n");
+		Print(L"\tFailed at loading payload!\n");
 		uart_print("Failed at loading payload!\r\n");
 		CpuDeadLoop();
 	}
 
-	Print(L"Payload is now in memory!\n");
+	Print(L"\tPayload is now in memory!\n");
 	uart_print("Payload is now in memory!\r\n");
 
 	char printBuffer[10];
@@ -77,27 +81,25 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	//
 	// Put uboot into memory
 	//
-	Print(L"Putting uboot into memory!\n");
+	Print(L"\tPutting uboot into memory!\n");
 	uart_print("Putting uboot into memory!\r\n");
 
 	size_t fileSize2 = 0;
-	Status = loadPayloadIntoMemory((EFI_PHYSICAL_ADDRESS)0x84000000, L"\\uboot.bin", &fileSize2);
+	Status = loadPayloadIntoMemory((EFI_PHYSICAL_ADDRESS)0x84000000, L"\\u-boot-dtb.bin", &fileSize2);
 	
 	if (Status != EFI_SUCCESS)
 	{
-		Print(L"Failed at loading uboot!\n");
+		Print(L"\tFailed at loading uboot!\n");
 		uart_print("Failed at loading uboot!\r\n");
 		CpuDeadLoop();
 	}
 
-	Print(L"Uboot is now in memory!\n");
+	Print(L"\tUboot is now in memory!\n");
 	uart_print("Uboot is now in memory!\r\n");
 
 	uart_print("Printing the 1st 4 bytes at 0x84000000!\r\n");
 	uart_print(utoa(*((uint32_t*)(0x84000000)), printBuffer, 16));
 	uart_print("\r\n");
-
-	Print(L"UEFI part finished. Setting up for SMC...\n");
 
 	// Disable MMU to get access to Trustzone memory
 	ArmDisableCachesAndMmu();
@@ -106,6 +108,12 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	// 0x8011219c is in the SMC handler, right after the NS bit was set to 0 in the SCR
 	// The memory needs to be marked as secure, as you can only execute secure memory in secure mode
 	memcpy_usr((void*)(0x8011219c), (const void*)0x83000000, (size_t)fileSize1);
+	memcpy_usr((void*)(0x81000000), (const void*)0x84000000, (size_t)fileSize2);
+	
+	uart_print("Printing the 1st 4 bytes at 0x81000000!\r\n");
+	uart_print(utoa(*((uint32_t*)(0x81000000)), printBuffer, 16));
+	uart_print("\r\n");
+	//Print(L"I just wrote Trustzone and I'm still alive!\r\n");
 	
 	// Payload is now in place. Enable MMU for memory dump.
 	ArmEnableMmu();
@@ -114,6 +122,8 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	
 	uart_print("I just wrote Trustzone and I'm still alive!\r\n");
 
+	Print(L"\tUEFI part finished. Setting up for SMC...\n");
+	Print(L"\tSee you on the otherside.\n");
 	// This should trigger an SMC, jump to the payload and output stuff to uart. Hopefully.
 	ArmCallSmcHelper(0x03, 0x09, 0, 0);
 
