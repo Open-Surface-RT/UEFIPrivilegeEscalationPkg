@@ -16,87 +16,70 @@
 #include <stdint.h>
 #include "system_regs.h"
 #include "tegra30_uart.h"
+#include "printf.h"
+#include "mmu_dump.h"
+
+void dump_important_stuff();
 
 void main()
 {
 	volatile uint32_t reg;
-	char buffer[100];
+	printf("-----------------------------------------------\r\n");
+	printf("--- Welcome to the otherside aka payload :) ---\r\n");
+	printf("-----------------------------------------------");
 	
-	uart_print("Welcome to the otherside aka payload :)\r\n");
-	
+	// Check if we are in Monitor mode
 	reg = get_processor_mode();
-	utoa(reg, buffer, 16);
-	uart_print("Current Mode:");
-	uart_print(buffer);
-	uart_print("\r\n");
+	printf("Current Mode: %x\r\n", reg);
 	
+	// Check if Security Related Registers can be written
 	reg = get_cp15sdisable();
-	utoa(reg, buffer, 16);
-	uart_print("CP15SDISABLE:");
-	uart_print(buffer);
-	uart_print("\r\n");
+	printf("CP15SDISABLE: %x\r\n", reg);
 	
 	*((uint32_t*)0x6000C208) |= (1 << 4);
 	
 	reg = get_cp15sdisable();
-	utoa(reg, buffer, 16);
-	uart_print("CP15SDISABLE:");
-	uart_print(buffer);
-	uart_print("\r\n");
+	printf("CP15SDISABLE: %x\r\n", reg);
 
-	reg = get_tbbr0();
-	utoa(reg, buffer, 16);
-	uart_print("TTBR0:");
-	uart_print(buffer);
-	uart_print("\r\n");
-/*
-	set_tbbr0(0);
-	
-	reg = get_tbbr0();
-	utoa(reg, buffer, 16);
-	uart_print("TTBR0:");
-	uart_print(buffer);
-	uart_print("\r\n");
-	
 
-	reg = get_dacr();
-	utoa(reg, buffer, 16);
-	uart_print("DACR:");
-	uart_print(buffer);
-	uart_print("\r\n");
+	dump_important_stuff();
+
+	clear_ns();
 	
-	set_dacr(0xFFFFFFFF);
+	dump_important_stuff();
 	
-	reg = get_dacr();
-	utoa(reg, buffer, 16);
-	uart_print("DACR:");
-	uart_print(buffer);
-	uart_print("\r\n");
-*/
 	reg = get_ns();
-	utoa(reg, buffer, 16);
-	uart_print("NS:");
-	uart_print(buffer);
-	uart_print("\r\n");
+	printf("NS: %x; %s\r\n", reg, reg == 0 ? "Secure" : "Non-Secure");
 	
-	
-	uart_print("Finished executing payload.\r\n");
-
-	// Dead loop. We don't want to execute random memory. 
-	// Returning to UEFI Application doesn't work either. (at least right now)
-	
+	// JUMP TO UBOOT
 	reg = *(uint32_t*)0x81000000U;
-	utoa(reg, buffer, 16);
-	uart_print("4Byte of 0x81000000:");
-	uart_print(buffer);
-	uart_print("\r\n");
+	printf("4Byte of 0x81000000: %x\r\n", reg);
+
+	printf("Finished executing payload. bye :)\r\n");
 	
 	void (*uboot)(void) = (void (*)())0x81000000U;
 	uboot();
 
-	uart_print("Why are we here????\r\n");
+	printf("Why are we here????\r\n");
 	
 	while(1);
 }
 
+void dump_important_stuff() {
+	volatile uint32_t reg;
 
+	reg = get_ns();
+	printf("NS: %x; %s\r\n", reg, reg == 0 ? "Secure" : "Non-Secure");
+
+	reg = get_dacr();
+	printf("DACR: %x\r\n", reg);
+
+	//set_dacr(0xFFFFFFFF);
+
+	//reg = get_dacr();
+	//printf("DACR: %x\r\n", reg);
+
+	printf("---------------- START DUMP MMU-------------------\r\n");
+	_start();
+	printf("---------------- END DUMP MMU-------------------\r\n");
+}

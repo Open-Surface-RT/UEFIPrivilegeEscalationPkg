@@ -27,7 +27,7 @@ LDFLAGS = -nostdlib -L /usr/lib/gcc/arm-none-eabi/9.2.1 -lgcc -Map=payload.map
 
 all: payload.bin
 
-payload.elf: payload.o system_regs.o tegra30_uart.o
+payload.elf: payload.o system_regs.o tegra30_uart.o printf.o mmu_dump.o
 	$(LD) $^ -T payload.lds  $(LDFLAGS) -o $@
 
 %.o: %.c

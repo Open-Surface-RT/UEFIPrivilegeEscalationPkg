@@ -5,6 +5,7 @@ OUTPUT_ARCH(arm)
 ENTRY(main)
 SECTIONS
 {
+	. = 0x80112174;
 	.text : {
 		*(.text)
 	}

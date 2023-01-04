@@ -41,9 +41,18 @@ void set_dacr(uint32_t val) {
 uint32_t get_ns() {
 	uint32_t res;
 	asm volatile ("MRC p15, 0, %0 , c1, c1 ,0" : "=r" (res) );
-	return res & 1;
+	return res & 0x01;
 }
 
-void set_ns(uint32_t val) {
-	asm volatile ("MCR p15, 0 , %0, c1 ,c1 ,0" : : "r" (val) );
+void set_ns() {
+	asm volatile (	"MRC p15, 0, r0 , c1, c1 ,0 \n"
+			"orr r0, r0, #0x01 \n"
+			"MCR p15, 0 , r0, c1 ,c1 ,0 \n"
+			);
+}
+void clear_ns(uint32_t val) {
+	asm volatile (	"MRC p15, 0, r0 , c1, c1, 0 \n"
+			"bic r0, r0, #0x01 \n"
+			"MCR p15, 0 , r0, c1 ,c1, 0 \n"
+			);
 }
