@@ -105,9 +105,10 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	ArmDisableCachesAndMmu();
 
 	// Copy payload into Trustzone memory. 
-	// 0x8011219c is in the SMC handler, right after the NS bit was set to 0 in the SCR
-	// The memory needs to be marked as secure, as you can only execute secure memory in secure mode
-	memcpy_usr((void*)(0x8011219c), (const void*)0x83000000, (size_t)fileSize1);
+	// 0x80112174 is in the SMC handler, right after the Synchronization barriers
+	// The memory needs to be marked as secure, as you can only execute secure memory in secure mode so
+	// we copy the payload to TZ memory
+	memcpy_usr((void*)(0x80112174), (const void*)0x83000000, (size_t)fileSize1);
 	memcpy_usr((void*)(0x81000000), (const void*)0x84000000, (size_t)fileSize2);
 	
 	uart_print("Printing the 1st 4 bytes at 0x81000000!\r\n");
