@@ -66,6 +66,17 @@ char* utoa_leading_zero(unsigned int value, char* result, int base, int stringsi
     return result;
 }
 
+void putc(int c, void *stream) {
+	// use this to keep track of if uart has been initialized
+	uart_init();
+
+	// put the char into the tx fifo
+	reg_write(UART_BASE, UART_THR_DLAB, c);
+
+	// wait for tx fifo to clear
+	while(!((reg_read(UART_BASE, UART_LSR) >> 5) & 0x01));
+
+}
 
 void uart_print(const char *string) {
 	// use this to keep track of if uart has been initialized
