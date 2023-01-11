@@ -26,6 +26,7 @@
   ArmPlatformPkg/ArmPlatformPkg.dec
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  CryptoPkg/CryptoPkg.dec
 
 [LibraryClasses]
   UefiApplicationEntryPoint
@@ -40,6 +41,8 @@
   BaseMemoryLib
   DebugLib
   PrintLib
+  BaseCryptLib
+  ArmSoftFloatLib
 
 [BuildOptions.ARM]
    # Well, eventually this should be removed
