@@ -23,41 +23,91 @@ void dump_important_stuff();
 
 void main()
 {
-	volatile uint32_t reg;
-	printf("-----------------------------------------------\r\n");
-	printf("--- Welcome to the otherside aka payload :) ---\r\n");
-	printf("-----------------------------------------------");
-	
+	//volatile uint32_t reg;
+	//printf("-----------------------------------------------\r\n");
+	//printf("--- Welcome to the otherside aka payload :) ---\r\n");
+	//printf("-----------------------------------------------\r\n");
+	/*
 	// Check if we are in Monitor mode
 	reg = get_processor_mode();
 	printf("Current Mode: %x\r\n", reg);
 	
-	// Check if Security Related Registers can be written
-	reg = get_cp15sdisable();
-	printf("CP15SDISABLE: %x\r\n", reg);
+	reg = get_ns();
+	printf("NS: %x; %s\r\n", reg, reg == 0 ? "Secure" : "Non-Secure");
 	
-	*((uint32_t*)0x6000C208) |= (1 << 4);
-	
-	reg = get_cp15sdisable();
-	printf("CP15SDISABLE: %x\r\n", reg);
-
-
-	dump_important_stuff();
-
 	clear_ns();
-	
-	dump_important_stuff();
 	
 	reg = get_ns();
 	printf("NS: %x; %s\r\n", reg, reg == 0 ? "Secure" : "Non-Secure");
 	
+	// Check if Security Related Registers can be written
+	reg = get_cp15sdisable();
+	printf("CP15SDISABLE: %x\r\n", reg);
+	*/
+	// CP15SDISABLE & CFGSDISABLE
+	*((uint32_t*)0x6000C208) |= (1 << 4) | (1 << 3);
+	
+//	MC_SMMU_CONFIG_0 = h10
+//	MC 7000:f000
+	*((uint32_t*)0x7000f010) = 0;
+	/*
+	reg = get_cp15sdisable();
+	printf("CP15SDISABLE: %x\r\n", reg);
+
+	
+	// Dump secure world stuff
+	printf("---------------------------\r\n");
+	printf("--- Secure World params ---\r\n");
+	printf("---------------------------\r\n");
+	//dump_important_stuff();
+
+	reg = *(uint32_t*)0x84000000U;
+	printf("4Byte of 0x84000000: %x\r\n", reg);
+	if (reg == 0xFFFFFFFF) {
+		printf("Can't access non-secure memory :(\r\n");
+	} else {
+		printf("Can access non-secure memory :)\r\n");
+	}
+
+
+	// Dump non-secure world stuff
+	printf("-------------------------------\r\n");
+	printf("--- Non-Secure World params ---\r\n");
+	printf("-------------------------------\r\n");
+	set_ns();
+	
+	reg = *(uint32_t*)0x84000000U;
+	printf("4Byte of 0x84000000: %x\r\n", reg);
+	if (reg == 0xFFFFFFFF) {
+		printf("Can't access non-secure memory :(\r\n");
+	} else {
+		printf("Can access non-secure memory :)\r\n");
+	}
+	//dump_important_stuff();
+	
+	reg = get_ns();
+	printf("NS: %x; %s\r\n", reg, reg == 0 ? "Secure" : "Non-Secure");
+	*/
+	
+	printf("Payload bitch :)\r\n");
+	
+	clear_ns();
+	
+	disable_mmu();
+	
+	//reg = get_ns();
+	//printf("NS: %x; %s\r\n", reg, reg == 0 ? "Secure" : "Non-Secure");
+	
 	// JUMP TO UBOOT
-	reg = *(uint32_t*)0x81000000U;
-	printf("4Byte of 0x81000000: %x\r\n", reg);
+	//reg = *(uint32_t*)0x81000000U;
+	//printf("4Byte of 0x81000000: %x\r\n", reg);
 
 	printf("Finished executing payload. bye :)\r\n");
 	
-	void (*uboot)(void) = (void (*)())0x81000000U;
+	
+	//asm volatile ("ldr pc, =0x81000000" : : );
+	
+	void (*uboot)(void) = (void (*)())0x84000000U;
 	uboot();
 
 	printf("Why are we here????\r\n");
