@@ -170,8 +170,11 @@ int mmu_dump(void)
     unsigned int entry;
 
     __asm__("mrc p15,0,%0,c2,c0,0" : "=r" (ttbr[0]));
+    ttbr[0] = 0xFFED8000;
     __asm__("mrc p15,0,%0,c2,c0,1" : "=r" (ttbr[1]));
+    ttbr[1] = 0x7BDFC000;
     __asm__("mrc p15,0,%0,c2,c0,2" : "=r" (ttbcr));
+    ttbcr = 0x00000000;
     printf("TTBR0: 0x%08X, TTBR1: 0x%08X, TTBCR: 0x%08X\r\n", ttbr[0], ttbr[1], ttbcr);
 
     n = ttbcr & 0x7;
