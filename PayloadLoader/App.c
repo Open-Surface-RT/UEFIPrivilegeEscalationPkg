@@ -1,4 +1,8 @@
 ﻿#include "Include/Application.h"
+//#include <Library/BaseCryptLib.h>
+#include <Library/BaseCryptLib.h>
+//#include <Library/BaseMemoryLib.h>
+#include <Library/MemoryAllocationLib.h>
 
 EFI_STATUS loadPayloadIntoMemory(EFI_PHYSICAL_ADDRESS memoryAddress, short unsigned int fileName[], size_t* fileSize);
 
@@ -33,6 +37,42 @@ char* utoa(unsigned int value, char* result, int base) {
     return result;
 }
 
+EFI_STATUS calc_sha256 (
+    UINT8   *memory,
+    IN  UINTN    length,
+    OUT UINT8   *response
+  )
+{
+	VOID     *HashContext;
+	UINT8    Digest[SHA256_DIGEST_SIZE];
+
+	HashContext = AllocatePool (Sha256GetContextSize ());
+	ZeroMem (Digest, SHA256_DIGEST_SIZE);
+
+	if (!Sha256Init (HashContext)) {
+		goto exit;
+	}
+
+	if (!Sha256Update (HashContext, memory, length)) {
+		goto exit;
+	}
+
+	if (!Sha256Final (HashContext, Digest)) {
+		goto exit;
+	}
+
+	Print(L"Hash:");
+	for (int i = 0; i < SHA256_DIGEST_SIZE; i++) {
+		Print(L"%02x", Digest[i]);
+	}
+	Print(L"\n");
+
+exit:
+	FreePool (HashContext);
+
+	return EFI_SUCCESS;
+}
+
 EFI_STATUS PayloadLoaderEntryPoint(
     EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
@@ -48,6 +88,17 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	Print(L"Payload Loader");
 	Print(L"\tHello World\n");
 	uart_print("Hello World.\r\n");
+
+	UINT8 hash_this[8] = "ABCDEFGH";
+	UINT8 hash[SHA256_DIGEST_SIZE];
+	calc_sha256(hash_this, 8, hash);
+	Print(L"Hash:");
+	for (int i = 0; i < 16; i++) {
+		Print(L"Payloadsize: %02x", hash[i]);
+	}
+	Print(L"\n");
+
+	while(1);
 
 	uart_print("perform exploit\r\n");
 	Print(L"\tUnprotect TZ\n");
@@ -126,6 +177,7 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	Print(L"\tUEFI part finished. Setting up for SMC...\n");
 	Print(L"\tSee you on the otherside.\n");
 	// This should trigger an SMC, jump to the payload and output stuff to uart. Hopefully.
+	uart_print("See you soon\r\n");
 	ArmCallSmcHelper(0x03, 0x09, 0, 0);
 
 	// We shouldn't get here since going back from the SMC in the payload isn't implemented
