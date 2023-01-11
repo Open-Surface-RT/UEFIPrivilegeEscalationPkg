@@ -35,7 +35,8 @@ uint32_t get_dacr() {
 }
 
 void set_dacr(uint32_t val) {
-	asm volatile ("MCR p15, 0, %0, c3, c0, 0" : : "r" (val) );
+	asm volatile (	"MCR p15, 0, %0, c3, c0, 0\n"
+			"ISB SY" : : "r" (val) );
 }
 
 uint32_t get_ns() {
@@ -45,14 +46,25 @@ uint32_t get_ns() {
 }
 
 void set_ns() {
-	asm volatile (	"MRC p15, 0, r0 , c1, c1 ,0 \n"
+	asm volatile (	"MRC p15, 0, r0, c1, c1 ,0 \n"
 			"orr r0, r0, #0x01 \n"
 			"MCR p15, 0 , r0, c1 ,c1 ,0 \n"
+			"ISB SY \n"
 			);
 }
 void clear_ns(uint32_t val) {
-	asm volatile (	"MRC p15, 0, r0 , c1, c1, 0 \n"
+	asm volatile (	"MRC p15, 0, r0, c1, c1, 0 \n"
 			"bic r0, r0, #0x01 \n"
 			"MCR p15, 0 , r0, c1 ,c1, 0 \n"
+			"ISB SY \n"
+			);
+}
+
+void disable_mmu() {
+	asm volatile (	"mrc   p15, 0, r0, c1, c0, 0 \n"           // Get control register
+			"bic   r0, r0, #0x1 \n"             	    // Disable MMU
+			"mcr   p15, 0, r0, c1, c0, 0 \n"           // Write control register
+			"dsb\n"
+			"isb\n"
 			);
 }

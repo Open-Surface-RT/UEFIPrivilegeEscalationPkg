@@ -14,4 +14,6 @@ uint32_t get_ns();
 void set_ns();
 void clear_ns();
 
+void disable_mmu();
+
 #endif
