@@ -18,7 +18,7 @@
 
 #include <Protocol/SimpleTextOut.h>
 
-void uart_print(const char *string);
+void uart_print(IN  CONST CHAR8  *FormatString, ...);
 void uart_init();
 
 typedef UINTN  size_t;
@@ -41,8 +41,7 @@ VOID FinalizeApp(VOID);
 
 VOID PerformNvTegra3Exploit(VOID);
 
-UINT32
-ArmCallSmcHelper(UINT32 R0, UINT32 R1, UINT32 R2, UINT32 R3);
+UINT32 ArmCallSmcHelper(UINT32 R0, UINT32 R1, UINT32 R2, UINT32 R3);
 
 VOID Tegra3ConsoleOutputFixup(VOID);
 

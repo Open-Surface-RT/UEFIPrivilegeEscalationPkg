@@ -49,30 +49,40 @@
 #define CLK_RST_CONTROLLER_CLK_SOURCE_UART	(0x178)
 #define UART_CAR_MASK 						(1 << 6)
 
-void uart_print(const char *string) {
+void uart_print(
+	IN  CONST CHAR8  *FormatString,
+  	...
+) {
+	char buf[80];
+	char *pBuf = buf;
+	VA_LIST ap;
+
 	// use this to keep track of if uart has been initialized
 	uart_init();
 
+	// calc format string
+	VA_START(ap, FormatString);
+	AsciiVSPrint(buf, 80, FormatString, ap);
+	VA_END(ap);
+
 	// send all characters until NULL to uart-N
-	while(*string) {
+	while(*pBuf) {
 		// put the char into the tx fifo
-		reg_write(UART_BASE, UART_THR_DLAB, (char) *string);
+		reg_write(UART_BASE, UART_THR_DLAB, (char) *pBuf);
 
 		// wait for tx fifo to clear
 		while(!((reg_read(UART_BASE, UART_LSR) >> 5) & 0x01));
 
 		// move on to next char
-		++string;
+		++pBuf;
 	}
 }
 
 void uart_init() {
 	if(reg_read(PMC_BASE, APBDEV_PMC_SCRATCH42_0) != MAGIC_VALUE) {
-
 		/* set pinmux for uart-a (surface RT) */
 		reg_write(PINMUX_BASE, PINMUX_AUX_ULPI_DATA0_0, 0b00000110); /* tx */
 		reg_write(PINMUX_BASE, PINMUX_AUX_ULPI_DATA1_0, 0b00100110); /* rx */
-
 
 		/* clear deep power down for all uarts */
 		reg_clear(PMC_BASE, APBDEV_PMC_IO_DPD_REQ_0, UART_DPD_BIT);
