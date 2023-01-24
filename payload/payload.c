@@ -23,7 +23,7 @@ void dump_important_stuff();
 
 void main()
 {
-	//volatile uint32_t reg;
+	volatile uint32_t reg;
 	//printf("-----------------------------------------------\r\n");
 	//printf("--- Welcome to the otherside aka payload :) ---\r\n");
 	//printf("-----------------------------------------------\r\n");
@@ -39,17 +39,29 @@ void main()
 	
 	reg = get_ns();
 	printf("NS: %x; %s\r\n", reg, reg == 0 ? "Secure" : "Non-Secure");
-	
-	// Check if Security Related Registers can be written
-	reg = get_cp15sdisable();
-	printf("CP15SDISABLE: %x\r\n", reg);
 	*/
+	// Check if Security Related Registers can be written
+	reg = get_SB_PFCFG_0();
+	printf("CP15SDISABLE: %08x\r\n", reg);
+	
 	// CP15SDISABLE & CFGSDISABLE
-	*((uint32_t*)0x6000C208) |= (1 << 4) | (1 << 3);
+	*((uint32_t*)0x6000C208) |= (0 << 4) | (0 << 5);
+
+	reg = get_SB_PFCFG_0();
+	printf("CP15SDISABLE: %08x\r\n", reg);
 	
 //	MC_SMMU_CONFIG_0 = h10
 //	MC 7000:f000
 	*((uint32_t*)0x7000f010) = 0;
+	
+	// Dump the flowcontroller
+	// Might contain some hints about SMP problem
+	uint32_t *flow_controller = (uint32_t*) 0x60007000U;
+	
+	for (int i = 0; i < 12; i++) {
+		printf("fc%d:0x%08x\r\n", i, *(flow_controller+i));
+	}
+	
 	/*
 	reg = get_cp15sdisable();
 	printf("CP15SDISABLE: %x\r\n", reg);
@@ -94,6 +106,17 @@ void main()
 	clear_ns();
 	
 	disable_mmu();
+	
+	uint32_t *ID_base = (uint32_t*)0x50041080;
+	
+	for (int i = 0; i < 6; i++) {
+		printf("ID_sec: 0x%08x\r\n", ID_base[i]);
+		if (i == 0) continue;
+		
+		ID_base[i] = 0;
+		printf("ID_sec: 0x%08x\r\n", ID_base[i]);
+		printf("-------");
+	}
 	
 	//reg = get_ns();
 	//printf("NS: %x; %s\r\n", reg, reg == 0 ? "Secure" : "Non-Secure");

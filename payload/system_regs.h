@@ -15,5 +15,6 @@ void set_ns();
 void clear_ns();
 
 void disable_mmu();
+uint32_t get_SB_PFCFG_0();
 
 #endif
