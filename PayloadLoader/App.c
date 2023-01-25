@@ -89,11 +89,15 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	// TrustZone memory is not mapped in normal world.
 	// Since I am lazy to modify PT, I decided to just turn off MMU
 	// and turn it back on later.
+	ArmDisableFiq();
+	ArmDisableInterrupts();
 	ArmDisableCachesAndMmu();
 	UINT32 Something = *((UINT32 *)(EFI_PHYSICAL_ADDRESS)0x80000000);
 	ArmEnableMmu();
 	ArmEnableDataCache();
 	ArmEnableInstructionCache();
+	ArmEnableFiq();
+	ArmEnableInterrupts();
 	Print(L"Something at 0x80000000 with exploit: 0x%08x\n", Something);
 	uart_print("Something at 0x80000000 with exploit: 0x%08x\n", Something);
 	if (Something == 0xFFFFFFFF) {
@@ -135,6 +139,8 @@ EFI_STATUS PayloadLoaderEntryPoint(
 
 	// Disable MMU to get access to Trustzone memory by disarming the Translation Table / Page Table
 	// NO UEFI FROM HERE: Print(), ..., and so on
+	ArmDisableFiq();
+	ArmDisableInterrupts();
 	ArmDisableCachesAndMmu();
 	uart_print("UEFI: MMU disbaled\r\n");
 
@@ -157,6 +163,8 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	ArmEnableInstructionCache();
 	uart_print("UEFI: I-Cache enabled\r\n");
 	// UEFI funtions can be used again.
+	ArmEnableFiq();
+	ArmEnableInterrupts();
 
 	Print(L"I just wrote Trustzone and I'm still alive!\r\n");
 	uart_print("I just wrote Trustzone and I'm still alive!\r\n");
