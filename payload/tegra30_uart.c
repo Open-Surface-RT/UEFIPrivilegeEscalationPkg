@@ -81,6 +81,17 @@ void putc(int c, void *stream) {
 void uart_print(const char *string) {
 	// use this to keep track of if uart has been initialized
 	uart_init();
+	
+	
+	// Mutex stuff
+	while (reg_read(PMC_BASE, APBDEV_PMC_SCRATCH41_0)) {
+		; // wait until mutex is released
+	}
+	
+	// take uart_mutex
+	reg_write(PMC_BASE, APBDEV_PMC_SCRATCH41_0, 1);
+	
+	
 	/*
 	char buffer[100];
 	char *string = buffer;
@@ -102,6 +113,9 @@ void uart_print(const char *string) {
 		// move on to next char
 		++string;
 	}
+	
+	// release uart_mutex
+	reg_write(PMC_BASE, APBDEV_PMC_SCRATCH41_0, 0);
 }
 
 
@@ -144,6 +158,9 @@ void uart_init() {
 
 		/* prevent this uart-N initialization from being done on subsequent calls to uart_print() */
 		reg_write(PMC_BASE, APBDEV_PMC_SCRATCH42_0, MAGIC_VALUE);
+		
+		/* use this reg as UART_MUTEX in a multicore set up :) */
+		reg_write(PMC_BASE, APBDEV_PMC_SCRATCH41_0, 0);
 	}
 }
 

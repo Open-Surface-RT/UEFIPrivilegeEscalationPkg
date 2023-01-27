@@ -19,6 +19,7 @@
 #include <Protocol/SimpleTextOut.h>
 
 void uart_print(IN  CONST CHAR8  *FormatString, ...);
+void uart_ll_print(char* buf);
 void uart_init();
 
 typedef UINTN  size_t;

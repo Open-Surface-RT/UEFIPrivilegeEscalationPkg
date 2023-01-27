@@ -68,3 +68,9 @@ void disable_mmu() {
 			"isb\n"
 			);
 }
+
+uint32_t get_mpidr() {
+	uint32_t res;
+	asm volatile ("MRC p15, 0, %0, c0, c0, 5" : "=r" (res) );
+	return res;
+}

@@ -11,6 +11,7 @@
 #define HEX_CHAR(x) ((((x) + '0') > '9') ? ((x) + '7') : ((x) + '0'))
 
 #define PMC_BASE					(0x7000e400)
+#define APBDEV_PMC_SCRATCH41_0			(0x140)
 #define APBDEV_PMC_SCRATCH42_0			(0x144)
 #define MAGIC_VALUE					(0x42)
 #define APBDEV_PMC_IO_DPD_REQ_0			(0x1b8)

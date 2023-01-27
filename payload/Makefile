@@ -23,12 +23,15 @@ CFLAGS = \
 	-O0 \
 	-mcpu=cortex-a9
 
-LDFLAGS = -nostdlib -L /usr/lib/gcc/arm-none-eabi/9.2.1 -lgcc -Map=payload.map
+LDFLAGS = -nostdlib -L /usr/lib/gcc/arm-none-eabi/9.2.1 -lgcc 
 
-all: payload.bin
+all: payload.bin payload_secondary.bin
 
 payload.elf: payload.o system_regs.o tegra30_uart.o printf.o mmu_dump.o
-	$(LD) $^ -T payload.lds  $(LDFLAGS) -o $@
+	$(LD) $^ -T payload.lds  $(LDFLAGS) -Map=payload.map -o $@
+	
+payload_secondary.elf: payload.o system_regs.o tegra30_uart.o printf.o mmu_dump.o
+	$(LD) $^ -T payload_secondary.lds  $(LDFLAGS) -Map=payload_secondary.map -o $@
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(DEFINES) $< -c -o $@

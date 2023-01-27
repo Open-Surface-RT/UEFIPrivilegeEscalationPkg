@@ -78,6 +78,23 @@ void uart_print(
 	}
 }
 
+void uart_ll_print(char *buf){
+	// use this to keep track of if uart has been initialized
+	uart_init();
+
+	// send all characters until NULL to uart-N
+	while(*buf) {
+		// put the char into the tx fifo
+		reg_write(UART_BASE, UART_THR_DLAB, (char) *buf);
+
+		// wait for tx fifo to clear
+		while(!((reg_read(UART_BASE, UART_LSR) >> 5) & 0x01));
+
+		// move on to next char
+		++buf;
+	}
+}
+
 void uart_init() {
 	if(reg_read(PMC_BASE, APBDEV_PMC_SCRATCH42_0) != MAGIC_VALUE) {
 		/* set pinmux for uart-a (surface RT) */
