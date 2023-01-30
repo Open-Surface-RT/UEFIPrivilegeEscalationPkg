@@ -112,7 +112,7 @@ static void acpi_parking_protocol_cpu_init(void)
 #define mem_write(addr, value) _MEM(addr) = value
 #define mem_clear(base, value) _R_MEMEG(addr) &= ~value
 #define mem_set(base, value) _RE_MEMG(addr) |= value
-void start_secondary_core(int cpu) {
+void start_secondary_core(uint32_t cpu) {
 	acpi_parking_protocol_cpu_init();
 
 	//Print(L"Let's goooo\r\n");
@@ -131,11 +131,11 @@ void start_secondary_core(int cpu) {
 
 	// Let the secondary core use the payload loaded by UEFI.
 	//Print(L"entry_write: %p\r\n", (uint32_t)(&cpu_mailbox_entries[cpu].mailbox->entry_point));
-	mem_write((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->entry_point), 0x83800000U);
-
+	//mem_write((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->entry_point), 0x83800000U);
+	*((uint32_t*)0x82002008) = 0x83800000U;
 	//Print(L"cpu_write: %p\r\n", (uint32_t)(&cpu_mailbox_entries[cpu].mailbox->cpu_id));
-	mem_write((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->cpu_id), cpu);
-
+	//mem_write((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->cpu_id), cpu);
+	*((uint32_t*)0x82002000) = 0x00000001;
 	// Interrupt magic.
 	// interrupt according to ACPI PP 0x00fe0000
 	// reg: 0xf00
@@ -147,21 +147,26 @@ void start_secondary_core(int cpu) {
 	//set_ns();
 
 	//Print(L"now the interrupt\r\n");
-	mem_write(0x50041f00U, 0x00fe0000U);
+	//mem_write(0x50041f00U, 0x00fe0000U);
+	asm volatile("dmb ishst\n");
+	*((uint32_t*)0x50041f00U) = 0x00fe0000U;
 
 
 	while (1) {
-		uint32_t reg = mem_read((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->entry_point));
-		uart_print("entry: %08x\r\n", reg);
-		reg = mem_read((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->cpu_id));
+		uint32_t reg = mem_read((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->cpu_id));
 		uart_print("cpu_id: %08x\r\n", reg);
-		/*
+		reg = mem_read((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->entry_point));
+		uart_print("entry: %08x\r\n", reg);
+		if (reg == 0x00) {
+			break;
+		}
+
 		for (int i = 0; i < 60000000; i++) {
 			asm("nop");
 		}
-		*/
+
 	}
-	//Print(L"interrupt done?!\r\n");
+	uart_print("interrupt done?!\r\n");
 
 }
 
@@ -184,10 +189,42 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	Print(L"Welcome to the Payload Loader\n");
 	uart_print("UEFI: Payload Loader\r\n");
 
+	// Load exploit for secondary core into memory
+	Print(L"Loading secondary payload into memory!\n");
+	uart_print("Loading secondary payload into memory!\r\n");
+	size_t fileSize3 = 0;
+	Status = loadPayloadIntoMemory((EFI_PHYSICAL_ADDRESS)0x83800000, L"\\payload_secondary.bin", &fileSize3);
+	if (Status != EFI_SUCCESS)
+	{
+		Print(L"\tFailed at loading secondary payload!\n");
+		uart_print("Failed at loading secondary payload!\r\n");
+		FinalizeApp();
+	}
+	Print(L"\tSecondary is now in memory!\n");
+	uart_print("Secondary is now in memory!\r\n");
+	*((volatile uint32_t*)0x83000000) = 0;
+	start_secondary_core(1);
+
+	uart_print("Wait for the word\r\n");
+	while (*((volatile uint32_t*)0x83000000) == 0/*!= 0xDEADBEEF*/) {
+		;
+	}
+	uart_print("secondar core is doing something\r\n");
+	Print(L"mpidr 2nd: %08x\n", *((volatile uint32_t*)0x83000000));
+
+	while (*((volatile uint32_t*)0x83000000) != 0xD00DFEED) {
+		;
+	}
+	uart_print("Secondary knows that it is secondary\r\n");
+
+	while(1) {
+		;
+	}
+
 	// Unprotect Trustzone
 	Print(L"\tUnprotect TZ\n");
 	uart_print("Unprotect TZ\r\n");
-/*
+
 	PerformNvTegra3Exploit();
 
 	// Check if TZ is unprotected
@@ -213,7 +250,7 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	}
 	uart_print("done exploit\r\n");
 	Print(L"done exploit\n");
-*/
+
 	// Load exploit payload into memory
 	Print(L"Loading exploit payload into memory!\n");
 	uart_print("Loading exploit payload into memory!\r\n");
@@ -228,21 +265,6 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	Print(L"\tPayload is now in memory!\n");
 	uart_print("Payload is now in memory!\r\n");
 
-	// Load exploit for secondary core into memory
-	Print(L"Loading secondary payload into memory!\n");
-	uart_print("Loading secondary payload into memory!\r\n");
-	size_t fileSize3 = 0;
-	Status = loadPayloadIntoMemory((EFI_PHYSICAL_ADDRESS)0x83800000, L"\\payload_secondary.bin", &fileSize3);
-	if (Status != EFI_SUCCESS)
-	{
-		Print(L"\tFailed at loading secondary payload!\n");
-		uart_print("Failed at loading secondary payload!\r\n");
-		FinalizeApp();
-	}
-	Print(L"\tSecondary is now in memory!\n");
-	uart_print("Secondary is now in memory!\r\n");
-
-/*
 	// Put uboot into memory
 	Print(L"Loading u-boot into memory!\n");
 	uart_print("Loading u-boot into memory!\r\n");
@@ -294,10 +316,8 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	uart_print("UEFI part finished. Setting up for SMC.\n");
 	Print(L"\tSee you on the otherside.\n");
 	uart_print("See you soon\r\n");
-	uart_print("Whats up you lil fucker?\r\n");
-	uart_ll_print("Whats up you lil fucker?\r\n");
-*/
-	start_secondary_core(1);
+/*
+	
 
 	// EXIT BOOT SERVICE AS TEST
 	UINTN MemMapSize = 0;
@@ -315,7 +335,7 @@ EFI_STATUS PayloadLoaderEntryPoint(
                 &DesVersion
         );
 
-        /* Shutdown */
+        // Shutdown 
         Status = gBS->ExitBootServices(
                 ImageHandle,
                 MapKey
@@ -328,10 +348,10 @@ EFI_STATUS PayloadLoaderEntryPoint(
         }
 	// EXIT BOOT SERVICE AS TEST
 
-	
+
 
 	while(1);
-
+*/
 	// This should trigger an SMC, jump to the payload and output stuff to uart. Hopefully.
 	ArmCallSmcHelper(0, 0, 0, 0);
 

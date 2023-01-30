@@ -23,8 +23,8 @@
 #define _MEM(addr) *(volatile uint32_t *)(addr)
 #define mem_read(addr) _MEM(addr)
 #define mem_write(addr, value) _MEM(addr) = value
-#define mem_clear(base, value) _R_MEMEG(addr) &= ~value
-#define mem_set(base, value) _RE_MEMG(addr) |= value
+#define mem_clear(base, value) _MEM(addr) &= ~value
+#define mem_set(base, value) _MEM(addr) |= value
 
 // adopted from kernel code. thanks Leander :)
 struct parking_protocol_mailbox {
@@ -48,7 +48,8 @@ void start_secondary_core(int cpu);
 
 void main()
 {
-	volatile uint32_t reg;
+	volatile uint32_t reg = 0;
+	(void)reg; // no more warning pls
 	//printf("-----------------------------------------------\r\n");
 	//printf("--- Welcome to the otherside aka payload :) ---\r\n");
 	//printf("-----------------------------------------------\r\n");
@@ -80,11 +81,13 @@ void main()
 
 	// Dump the flowcontroller
 	// Might contain some hints about SMP problem
+	/*
 	uint32_t *flow_controller = (uint32_t*) 0x60007000U;
 	
 	for (int i = 0; i < 12; i++) {
 		printf("fc%d:0x%08x\r\n", i, *(flow_controller+i));
 	}
+	*/
 	
 	/*
 	reg = get_cp15sdisable();
@@ -124,8 +127,58 @@ void main()
 	reg = get_ns();
 	printf("NS: %x; %s\r\n", reg, reg == 0 ? "Secure" : "Non-Secure");
 	*/
+	/*
+	reg = *((uint32_t*)0x6000d12C);
+	reg &= ~0x01;
+	*((uint32_t*)0x6000d12C) = reg;
+	*/
 	
-	printf("Payload bitch :)\r\n");
+	//printf("Payload bitch :)\r\n");
+	
+	
+	// MULTICORE ADVENTURE
+//	uint32_t res;
+//	asm volatile ("MRC p15, 0, %0, c0, c0, 5" : "=r" (res) );
+	
+	*((uint32_t*)0x83000000) = 0xDEADBEEF;
+	
+	//for (int i = 0; i < 60000000; i++) {
+	//	asm("nop");
+	//}
+	
+	*((uint32_t*)0x83000000) = 0xD00DFEED;
+	asm volatile("dmb");
+	
+	reg = get_mpidr();
+	
+	
+	uint32_t core = reg & 0x03;
+	//printf("Core: %d\r\n", core);
+	if (core == 0){
+		printf("mpidr: 0x%08x\r\n", reg);
+		printf("Let's start the secondary :)\r\n");
+		start_secondary_core(1);
+		
+		while (*((volatile uint32_t*)0x83000000) != 0xDEADBEEF) {
+			;
+		}
+		printf("yes secondary is running :) \r\n");
+		while (1); // love you too.
+	} else {
+		*((uint32_t*)0x83000000) = 0xD00DFEED;
+		asm volatile("dmb");
+		uart_print("secondary is here :)\r\n");
+		uart_print("secondary is here :)\r\n");
+		uart_print("secondary is here :)\r\n");
+		uart_print("secondary is here :)\r\n");
+		printf("i am core: %d\r\n", core);
+		printf("i am core: %d\r\n", core);
+		printf("i am core: %d\r\n", core);
+		printf("i am core: %d\r\n", core);
+		printf("i am core: %d\r\n", core);
+		while(1); // good night. Burn hot
+	}
+	// ADVENTURE ends here
 	
 	// MC_SMMU_CONFIG_0 = h10
 	// MC 7000:f000
@@ -135,29 +188,6 @@ void main()
 	
 	disable_mmu();
 	
-	
-	
-	// MULTICORE ADVENTURE
-	reg = get_mpidr();
-	printf("mpidr: 0x%08x\r\n", reg);
-	
-	uint32_t core = reg & 0x03;
-	printf("Core: %d\r\n", core);
-	if (core == 0){
-		printf("Let's start the secondary :)\r\n");
-		start_secondary_core(1);
-		while (1); // love you too.
-	} else {
-		
-		printf("i am core: %d\r\n", core);
-		printf("i am core: %d\r\n", core);
-		printf("i am core: %d\r\n", core);
-		printf("i am core: %d\r\n", core);
-		printf("i am core: %d\r\n", core);
-		while(1); // good night. Burn hot
-	}
-	
-	// ADVENTURE ends here
 	
 	
 	
@@ -225,39 +255,63 @@ void start_secondary_core(int cpu) {
 	acpi_parking_protocol_cpu_init();
 	
 	printf("Let's goooo\r\n");
+	printf("cpu: %d\r\n", cpu);
 	
 	printf("mailbox_address: %p\r\n", &cpu_mailbox_entries[cpu].mailbox->cpu_id);
 	
 	printf("mailbox_value: %08x\r\n", *((uint32_t*)0x82002000U));
+	printf("mailbox_value: %08x\r\n", *((uint32_t*)0x82002008U));
 	
 	uint32_t cpu_id = *((uint32_t*)0x82002000U); //mem_read(cpu_mailbox_entries[cpu].mailbox->cpu_id);
-	printf("cpu: %d\r\n", cpu);
-	printf("cpu_id: %d\r\n", cpu_id);
+
 	
 	if (cpu_id != ~0U) {
 		printf("something wrong\r\n");
+		return;
 	}
+	//clear_ns();
+	//disable_mmu();
 	
 	// Let the secondary core use the payload loaded by UEFI.
 	printf("entry_write: %p\r\n", (uint32_t)(&cpu_mailbox_entries[cpu].mailbox->entry_point));
-	mem_write((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->entry_point), 0x83800000U);
-	
+	mem_write(0x82002008U, 0x83000000U);
+
 	printf("cpu_write: %p\r\n", (uint32_t)(&cpu_mailbox_entries[cpu].mailbox->cpu_id));
-	mem_write((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->cpu_id), cpu); 
+	mem_write(0x82002000U, cpu); 
 	
 	// Interrupt magic. 
 	// interrupt according to ACPI PP 0x00fe0000
 	// reg: 0xf00
 	// base: 0x50041000
 	
-	printf("mailbox_cpu_id: %08x\r\n", *((uint32_t*)0x82002000U));
-	printf("mailbox_entry: %08x\r\n", *((uint32_t*)0x8200200bU));
-	
+	asm volatile (	"dmb ishst\n");
 	set_ns();
 	
-	printf("now the interrupt\r\n");
+	//printf("mailbox_cpu_id: %08x\r\n", *((uint32_t*)0x82002000U));
+	//printf("mailbox_entry: %08x\r\n", *((uint32_t*)0x82002008U));
+	
+	
+	//printf("now the interrupt\r\n");
 	mem_write(0x50041f00U, 0x00fe0000U);
 	printf("interrupt done?!\r\n");
+	
+	while (1) {
+		volatile uint32_t reg;
+		reg = mem_read(0x82002000U);
+		printf("cpu_id: %08x\r\n", reg);
+		
+		reg = mem_read(0x82002008U);
+		printf("entry: %08x\r\n", reg);
+		
+		if (reg == 0x00) {
+			break;
+		}
+
+		for (int i = 0; i < 600000; i++) {
+			asm("nop");
+		}
+
+	}
 	
 }
 
