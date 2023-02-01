@@ -18,9 +18,13 @@
 
 #include <Protocol/SimpleTextOut.h>
 
+#include <stdint.h>
+
 void uart_print(IN  CONST CHAR8  *FormatString, ...);
 void uart_ll_print(char* buf);
 void uart_init();
+
+void start_secondary_core(uint32_t cpu);
 
 typedef UINTN  size_t;
 typedef UINT8  uint8_t;
@@ -60,3 +64,10 @@ void *memmem(const void *h0, size_t k, const void *n0, size_t l);
    << ((size_t)(b) % (8 * sizeof *(a))))
 
 extern EFI_GUID gEfiGlobalVariableGuid;
+
+
+#define _MEM(addr) *(volatile uint32_t *)(addr)
+#define mem_read(addr) _MEM(addr)
+#define mem_write(addr, value) _MEM(addr) = value
+#define mem_clear(base, value) _R_MEMEG(addr) &= ~value
+#define mem_set(base, value) _RE_MEMG(addr) |= value

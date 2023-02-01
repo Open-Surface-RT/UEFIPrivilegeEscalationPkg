@@ -18,6 +18,7 @@
   DeviceLut.c
   Smc.c
   Uart.c
+  acpi_parking_protocol.c
 
   Include/Application.h
 
