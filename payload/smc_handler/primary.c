@@ -14,10 +14,10 @@
 // end original header
 
 #include <stdint.h>
-#include "system_regs.h"
-#include "tegra30_uart.h"
-#include "printf.h"
-#include "mmu_dump.h"
+#include "../common/system_regs.h"
+#include "../common/tegra30_uart.h"
+#include "../common/printf.h"
+//#include "../common/mmu_dump.h"
 
 
 #define _MEM(addr) *(volatile uint32_t *)(addr)
@@ -48,6 +48,11 @@ void start_secondary_core(int cpu);
 
 void main()
 {
+	// Context switch from Non-Secure to Secure.
+	// Need to synchronize everything
+	asm volatile (	"ISB SY\n"
+			"DSB SY\n"
+	);
 	volatile uint32_t reg = 0;
 	(void)reg; // no more warning pls
 	//printf("-----------------------------------------------\r\n");
@@ -314,7 +319,7 @@ void start_secondary_core(int cpu) {
 	}
 	
 }
-
+/*
 void dump_important_stuff() {
 	volatile uint32_t reg;
 
@@ -333,3 +338,4 @@ void dump_important_stuff() {
 	_start();
 	printf("---------------- END DUMP MMU-------------------\r\n");
 }
+*/
