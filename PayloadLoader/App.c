@@ -72,12 +72,14 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	size_t file_size_primary_smc = 0;
 	size_t file_size_secondary_smc = 0;
 	size_t file_size_secondary_trampoline = 0;
-	size_t file_size_uboot = 0;
+	//size_t file_size_uboot = 0;
 
-	const EFI_PHYSICAL_ADDRESS addr_primary_smc = 0x83000000;
-	const EFI_PHYSICAL_ADDRESS addr_secondary_smc = 0x83005000;
-	const EFI_PHYSICAL_ADDRESS addr_secondary_trampoline = 0x8300A000;
-	const EFI_PHYSICAL_ADDRESS addr_uboot = 0x84000000;
+	const uint32_t addr_primary_smc = 0x83000000U;
+	const uint32_t addr_secondary_smc = 0x83005000U;
+	const uint32_t addr_secondary_trampoline = 0x8300A000U;
+
+	uart_print("addr_secondary_smc: %016x\r\n", addr_secondary_smc);
+	//const EFI_PHYSICAL_ADDRESS addr_uboot = 0x84000000U;
 
 	// Turn off watchdog timer, since this does take a while
 	uart_print("Disable Watchdog\r\n");
@@ -94,20 +96,18 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	uart_print("Unprotect TZ: done\r\n");
 
 	// Load Primary SMC Handler payload into memory
-	/*
 	uart_print("Primary SMC Handler: Load\r\n");
-	Status = loadPayloadIntoMemory(addr_primary_smc, L"\\primary.bin", &file_size_primary_smc);
+	Status = loadPayloadIntoMemory((EFI_PHYSICAL_ADDRESS)addr_primary_smc, L"\\primary.bin", &file_size_primary_smc);
 	if (Status != EFI_SUCCESS)
 	{
 		uart_print("Primary SMC Handler: Loading Failed\r\n");
 		FinalizeApp();
 	}
 	uart_print("Primary SMC Handler: Loaded Successfully\r\n");
-	*/
 
 	// Load Secondary SMC Handler payload into memory
 	uart_print("Secondary SMC Handler: Load\r\n");
-	Status = loadPayloadIntoMemory(addr_secondary_smc, L"\\secondary.bin", &file_size_secondary_smc);
+	Status = loadPayloadIntoMemory((EFI_PHYSICAL_ADDRESS)addr_secondary_smc, L"\\secondary.bin", &file_size_secondary_smc);
 	if (Status != EFI_SUCCESS)
 	{
 		uart_print("Secondary SMC Handler: Loading Failed\r\n");
@@ -117,7 +117,7 @@ EFI_STATUS PayloadLoaderEntryPoint(
 
 	// Load start Secondary Trampoline
 	uart_print("Secondary Trampoline: Load\r\n");
-	Status = loadPayloadIntoMemory(addr_secondary_trampoline, L"\\secondary_trampolin.bin", &file_size_secondary_trampoline);
+	Status = loadPayloadIntoMemory((EFI_PHYSICAL_ADDRESS)addr_secondary_trampoline, L"\\secondary_trampolin.bin", &file_size_secondary_trampoline);
 	if (Status != EFI_SUCCESS)
 	{
 		uart_print("Secondary Trampoline: Loading Failed\r\n");
@@ -126,6 +126,7 @@ EFI_STATUS PayloadLoaderEntryPoint(
 	uart_print("Secondary Trampoline: Loaded Successfully\r\n");
 
 	// Put uboot into memory
+	/*
 	uart_print("U-Boot: Load\r\n");
 	Status = loadPayloadIntoMemory(addr_uboot, L"\\u-boot-dtb.bin", &file_size_uboot);
 	if (Status != EFI_SUCCESS)
@@ -134,19 +135,20 @@ EFI_STATUS PayloadLoaderEntryPoint(
 		FinalizeApp();
 	}
 	uart_print("U-Boot: Loaded Successfully\r\n");
+	*/
 
 	// Disable MMU to get access to Trustzone memory by disarming the Translation Table / Page Table
 	// NO UEFI FROM HERE: Print(), ..., and so on
 	ArmDisableFiq();
 	ArmDisableInterrupts();
 	ArmDisableCachesAndMmu();
-	uart_print("UEFI: MMU disbaled\r\n");
+	uart_print("UEFI: MMU disabled\r\n");
 
 	// Copy payload into Trustzone memory.
 	// 0x8011216C is in the SMC handler
 	// The memory needs to be marked as secure, as you can only execute secure memory in secure mode so
 	// we copy the payload to TZ memory
-	memcpy_usr((void*)(0x8011216C), (const void*)addr_primary_smc, file_size_primary_smc);
+	//memcpy_usr((void*)(0x8011216C), (const void*)addr_primary_smc, file_size_primary_smc);
 	memcpy_usr((void*)(0x82002820), (const void*)addr_secondary_smc, file_size_secondary_smc);
 	ArmDataSynchronizationBarrier();
 	uart_print("UEFI: payload copied\r\n");
@@ -343,7 +345,10 @@ EFI_STATUS loadPayloadIntoMemory(EFI_PHYSICAL_ADDRESS memoryAddress, short unsig
 		return status;
 	}
 
+	uart_print("memoryAddress: %016lx\r\n", memoryAddress);
 	EFI_PHYSICAL_ADDRESS payloadFileBuffer = memoryAddress;
+	uart_print("payloadFileBuffer: %016lx\r\n", payloadFileBuffer);
+
 	UINTN payloadFileSize = payloadFileInformation->FileSize;
 
 	Print(L"Payloadsize: %u\n", payloadFileSize);
@@ -392,7 +397,7 @@ EFI_STATUS loadPayloadIntoMemory(EFI_PHYSICAL_ADDRESS memoryAddress, short unsig
 
 	*fileSize = payloadFileSize;
 
-	Print(L"File is now in memory at location 0x%x!\n", payloadFileBuffer);
+	Print(L"File is now in memory at location 0x%08lx!\n", payloadFileBuffer);
 
 	// Calc hash of loaded data
 	UINT8    Digest[SHA256_DIGEST_SIZE];
@@ -405,4 +410,97 @@ EFI_STATUS loadPayloadIntoMemory(EFI_PHYSICAL_ADDRESS memoryAddress, short unsig
 	//uart_print("Printing the 1st 4 bytes at 0x84000000: %08x\r\n", *((uint32_t*)(0x84000000)));
 
 	return EFI_SUCCESS;
+}
+
+
+// adopted from kernel code. thanks Leander :)
+struct parking_protocol_mailbox {
+	uint32_t cpu_id;
+	uint32_t reserved;
+	uint64_t entry_point; // keep at 64Bit to keep cpu_mailbox_entry aligned
+};
+
+struct cpu_mailbox_entry {
+	struct parking_protocol_mailbox *mailbox;
+	uint32_t mailbox_addr;
+	uint8_t version;
+	uint8_t gic_cpu_id;
+};
+
+static struct cpu_mailbox_entry cpu_mailbox_entries[4];
+
+// removed 'unsigned int cpu' from parameter list and changed return type to void
+static void acpi_parking_protocol_cpu_init(void)
+{
+	//Print(L"%s: has been called. Hardcoding MADT table for Surface RT.\r\n", __func__);
+
+	cpu_mailbox_entries[0].gic_cpu_id = 0;
+	cpu_mailbox_entries[0].version = 1;
+	cpu_mailbox_entries[0].mailbox_addr = 0x82001000;
+	cpu_mailbox_entries[0].mailbox = (struct parking_protocol_mailbox*)(0x82001000U);
+
+	cpu_mailbox_entries[1].gic_cpu_id = 1;
+	cpu_mailbox_entries[1].version = 1;
+	cpu_mailbox_entries[1].mailbox_addr = 0x82002000;
+	cpu_mailbox_entries[1].mailbox = (struct parking_protocol_mailbox*)(0x82002000U);
+
+	cpu_mailbox_entries[2].gic_cpu_id = 2;
+	cpu_mailbox_entries[2].version = 1;
+	cpu_mailbox_entries[2].mailbox_addr = 0x82003000;
+	cpu_mailbox_entries[2].mailbox = (struct parking_protocol_mailbox*)(0x82003000U);
+
+	cpu_mailbox_entries[3].gic_cpu_id = 3;
+	cpu_mailbox_entries[3].version = 1;
+	cpu_mailbox_entries[3].mailbox_addr = 0x82004000;
+	cpu_mailbox_entries[3].mailbox = (struct parking_protocol_mailbox*)(0x82004000U);
+}
+
+void start_secondary_core(uint32_t cpu) {
+	acpi_parking_protocol_cpu_init();
+
+	//Print(L"Let's goooo\r\n");
+
+	//Print(L"mailbox_address: %p\r\n", &cpu_mailbox_entries[cpu].mailbox->cpu_id);
+
+	//Print(L"mailbox_value: %08x\r\n", *((uint32_t*)0x82002000U));
+
+	uint32_t cpu_id = *((uint32_t*)0x82002000U); //mem_read(cpu_mailbox_entries[cpu].mailbox->cpu_id);
+	//Print(L"cpu: %d\r\n", cpu);
+	//Print(L"cpu_id: %d\r\n", cpu_id);
+
+	if (cpu_id != ~0U) {
+		Print(L"something wrong\r\n");
+	}
+
+	// Let the secondary core use the payload loaded by UEFI.
+	//Print(L"entry_write: %p\r\n", (uint32_t)(&cpu_mailbox_entries[cpu].mailbox->entry_point));
+	//mem_write((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->entry_point), 0x83800000U);
+	*((uint32_t*)0x82002008) = 0x8300A000U;
+	//Print(L"cpu_write: %p\r\n", (uint32_t)(&cpu_mailbox_entries[cpu].mailbox->cpu_id));
+	//mem_write((uint32_t)(&cpu_mailbox_entries[cpu].mailbox->cpu_id), cpu);
+	*((uint32_t*)0x82002000) = 0x00000001U;
+	// Interrupt magic.
+	// interrupt according to ACPI PP 0x00fe0000
+	// reg: 0xf00
+	// base: 0x50041000
+
+	//Print(L"mailbox_cpu_id: %08x\r\n", *((uint32_t*)0x82002000U));
+	//Print(L"mailbox_entry: %08x\r\n", *((uint32_t*)0x82002008U));
+
+	//set_ns();
+
+	//Print(L"now the interrupt\r\n");
+	//mem_write(0x50041f00U, 0x00fe0000U);
+	asm volatile("dmb ishst\n");
+	// use ArmGicSendSgiTo : ArmPkg/Drivers/ArmGiC/ArnGicLib.c
+	// Does the same thing boot looks cooler ;)
+	*((uint32_t*)0x50041f00U) = 0x00fe0000U;
+
+	uart_print("Waiting for Mailbox to clear\r\n");
+	volatile uint32_t reg = mem_read(0x82002008);
+	while (reg) {
+		reg = mem_read(0x82002008);
+	}
+	uart_print("Mailbox cleared\r\n");
+
 }

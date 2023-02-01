@@ -30,8 +30,8 @@ all: primary.bin secondary.bin tertiary.bin
 primary.elf: primary.o ../common/system_regs.o ../common/tegra30_uart.o ../common/printf.o
 	$(LD) $^ -T primary.lds  $(LDFLAGS) -Map=primary.map -o $@
 	
-# ../common/system_regs.o ../common/tegra30_uart.o ../common/printf.o
-secondary.elf: other_cores.o 
+# 
+secondary.elf: other_cores.o ../common/system_regs.o ../common/tegra30_uart.o ../common/printf.o
 	$(LD) $^ -T secondary.lds  $(LDFLAGS) -Map=secondary.map -o $@
 
 tertiary.elf: other_cores.o

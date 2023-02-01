@@ -12,7 +12,5 @@ loop:
 	str r2, [r0]
 	sub r2, r2, #1
 	dmb
-	smc #0
+	#smc #0
 	b loop
-
-	

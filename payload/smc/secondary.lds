@@ -3,6 +3,7 @@
 OUTPUT_FORMAT("elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(main)
+
 SECTIONS
 {
 	. = 0x8300A000;
