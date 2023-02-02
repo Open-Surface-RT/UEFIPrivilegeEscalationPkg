@@ -19,6 +19,7 @@
   Smc.c
   Uart.c
   acpi_parking_protocol.c
+  sha256.c
 
   Include/Application.h
 

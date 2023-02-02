@@ -15,6 +15,7 @@
 #include <Library/FileHandleLib.h>
 #include <Protocol/LoadedImage.h>
 #include <Guid/FileInfo.h>
+#include <Library/BaseCryptLib.h>
 
 #include <Protocol/SimpleTextOut.h>
 
@@ -24,7 +25,13 @@ void uart_print(IN  CONST CHAR8  *FormatString, ...);
 void uart_ll_print(char* buf);
 void uart_init();
 
-void start_secondary_core(uint32_t cpu);
+void start_secondary_core(int cpu);
+
+EFI_STATUS calc_sha256 (
+		UINT8 		*memory,
+		IN  UINTN 	length,
+		OUT UINT8 	*response
+	);
 
 typedef UINTN  size_t;
 typedef UINT8  uint8_t;
