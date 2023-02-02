@@ -3,11 +3,20 @@
 OUTPUT_FORMAT("elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(main)
+
+STACK_SIZE = 0x400; /* 1 kB */
+
 SECTIONS
 {
-	. = 0x8011216C;
+	. = 0x83100000;
 	.text : {
 		*(.text)
+	}
+	.stack (NOLOAD) :
+	{
+		. = ALIGN(8);
+		. = . + STACK_SIZE;
+		. = ALIGN(8);
 	}
 
 	/* always end on a word boundary for our copy */

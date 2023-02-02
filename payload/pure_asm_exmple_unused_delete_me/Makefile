@@ -23,10 +23,10 @@ CFLAGS = \
 
 LDFLAGS = -nostdlib -L /usr/lib/gcc/arm-none-eabi/9.2.1 -lgcc
 
-all: secondary.bin 
+all: s_secondary.bin 
 
-secondary.elf: secondary.o
-	$(LD) $^ -T secondary.lds  $(LDFLAGS) -Map=secondary.map -o $@
+s_secondary.elf: s_secondary.o
+	$(LD) $^ -T s_secondary.lds  $(LDFLAGS) -Map=s_secondary.map -o $@
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(DEFINES) $< -c -o $@
