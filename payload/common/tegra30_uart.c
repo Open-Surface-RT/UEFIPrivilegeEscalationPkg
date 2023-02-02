@@ -68,7 +68,7 @@ char* utoa_leading_zero(unsigned int value, char* result, int base, int stringsi
 
 void putc(int c, void *stream) {
 	// use this to keep track of if uart has been initialized
-	uart_init();
+	//uart_init();
 
 	// put the char into the tx fifo
 	reg_write(UART_BASE, UART_THR_DLAB, c);
@@ -84,12 +84,12 @@ void uart_print(const char *string) {
 	
 	
 	// Mutex stuff
-	while (reg_read(PMC_BASE, APBDEV_PMC_SCRATCH41_0)) {
-		; // wait until mutex is released
-	}
+	//while (reg_read(PMC_BASE, APBDEV_PMC_SCRATCH41_0)) {
+	//	; // wait until mutex is released
+	//}
 	
 	// take uart_mutex
-	reg_write(PMC_BASE, APBDEV_PMC_SCRATCH41_0, 1);
+	//reg_write(PMC_BASE, APBDEV_PMC_SCRATCH41_0, 1);
 	
 	
 	/*
@@ -115,7 +115,7 @@ void uart_print(const char *string) {
 	}
 	
 	// release uart_mutex
-	reg_write(PMC_BASE, APBDEV_PMC_SCRATCH41_0, 0);
+	//reg_write(PMC_BASE, APBDEV_PMC_SCRATCH41_0, 0);
 }
 
 
@@ -160,7 +160,7 @@ void uart_init() {
 		reg_write(PMC_BASE, APBDEV_PMC_SCRATCH42_0, MAGIC_VALUE);
 		
 		/* use this reg as UART_MUTEX in a multicore set up :) */
-		reg_write(PMC_BASE, APBDEV_PMC_SCRATCH41_0, 0);
+		//reg_write(PMC_BASE, APBDEV_PMC_SCRATCH41_0, 0);
 	}
 }
 

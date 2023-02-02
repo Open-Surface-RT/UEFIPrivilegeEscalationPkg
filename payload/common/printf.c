@@ -33,8 +33,13 @@
  *	@(#)subr_prf.c	8.3 (Berkeley) 1/21/94
  */
 
+#include "tegra30_uart.h"
+
+extern void lock_mutex(void* mutex);
+extern void unlock_mutex(void* mutex);
+
 #define putchar putc
-void putc(int c, void *stream);
+//void putc(int c, void *stream);
 
 typedef unsigned long size_t;
 typedef long ssize_t;
@@ -434,10 +439,18 @@ number:
 #undef PCHAR
 }
 
+#define _REG(base, off) 				*(volatile unsigned int *)((base) + (off))
+#define reg_write(base, off, value) 			_REG(base, off) = value
+#define reg_clear(base, off, value) 			_REG(base, off) &= ~value
+#define reg_set(base, off, value) 			_REG(base, off) |= value
+#define reg_read(base, off) 				_REG(base, off)
+
+#define PMC_BASE					(0x7000e400)
+#define APBDEV_PMC_SCRATCH41_0			(0x140)
+
 void
 printf(const char *fmt, ...)
 {
-	/* http://www.pagetable.com/?p=298 */
 	va_list ap;
 
 	va_start(ap, fmt);
