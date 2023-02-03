@@ -5,7 +5,7 @@ OUTPUT_ARCH(arm)
 ENTRY(main)
 SECTIONS
 {
-	. = 0x83800000;
+	. = LOAD_ADDR;
 	.text : {
 		*(.text)
 	}

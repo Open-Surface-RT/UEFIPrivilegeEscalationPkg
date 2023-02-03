@@ -7,10 +7,9 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 
 CFLAGS = \
 	-mtune=generic-armv7-a \
-	-mlittle-endian \
 	-mcpu=cortex-a9 \
+	-mlittle-endian \
 	-fno-stack-protector \
-	-fpic \
 	-fno-common \
 	-fno-builtin \
 	-ffreestanding \
@@ -21,24 +20,25 @@ CFLAGS = \
 	-Wno-error=unused-function \
 	-g \
 	-O0 \
+	-fpic 
+
+OBJS = ../common/system_regs.o ../common/tegra30_uart.o ../common/printf.o ../common/lock.o
+
+LDFLAGS = -T s_payload.lds -nostdlib -L /usr/lib/gcc/arm-none-eabi/9.2.1 -lgcc -Map=$(basename $@).map
+
+all: s_primary.bin s_secondary.bin s_tertiary.bin s_quaternary.bin
+
+s_primary.elf: s_payload.o $(OBJS)
+	$(LD) $^ --defsym LOAD_ADDR=0x80112174 $(LDFLAGS) -o $@
 	
+s_secondary.elf: s_payload.o $(OBJS)
+	$(LD) $^ --defsym LOAD_ADDR=0x83100000 $(LDFLAGS) -o $@
 
-LDFLAGS = -nostdlib -L /usr/lib/gcc/arm-none-eabi/9.2.1 -lgcc 
+s_tertiary.elf: s_payload.o $(OBJS)
+	$(LD) $^ --defsym LOAD_ADDR=0x00000000 $(LDFLAGS) -o $@
 
-all: s_primary.bin s_secondary.bin
-
-s_primary.elf: s_primary.o ../common/system_regs.o ../common/tegra30_uart.o ../common/printf.o ../common/lock.o
-	$(LD) $^ -T s_primary.lds  $(LDFLAGS) -Map=s_primary.map -o $@
-	
-# 
-s_secondary.elf: s_primary.o ../common/system_regs.o ../common/tegra30_uart.o ../common/printf.o ../common/lock.o
-	$(LD) $^ -T s_secondary.lds  $(LDFLAGS) -Map=s_secondary.map -o $@
-
-s_tertiary.elf: s_other_cores.o ../common/system_regs.o ../common/tegra30_uart.o ../common/printf.o
-	$(LD) $^ -T s_tertiary.lds  $(LDFLAGS) -Map=s_tertiary.map -o $@
-
-s_quaternary.elf: s_other_cores.o ../common/system_regs.o ../common/tegra30_uart.o ../common/printf.o
-	$(LD) $^ -T s_quaternary.lds  $(LDFLAGS) -Map=s_quaternary.map -o $@
+s_quaternary.elf: s_payload.o $(OBJS)
+	$(LD) $^ --defsym LOAD_ADDR=0x00000000 $(LDFLAGS) -o $@
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(DEFINES) $< -c -o $@
